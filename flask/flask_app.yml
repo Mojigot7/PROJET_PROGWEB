@@ -30,3 +30,56 @@ spec:
     targetPort: 5000
   selector:
     app: flaskapp
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: flaskapp
+  annotations:
+#    nginx.ingress.kubernetes.io/rewrite-target: /$1
+spec:
+  rules:
+    - host: flaskapp.projet
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: flaskapp
+                port:
+                  number: 5000
+
+---
+
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: flaskapp
+spec:
+  hosts:
+  - flaskapp.projet
+  http:
+  - route:
+    - destination:
+        host: flaskapp
+        port:
+          number: 5000
+
+---
+
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: flask-gateway
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "flaskapp.projet"
